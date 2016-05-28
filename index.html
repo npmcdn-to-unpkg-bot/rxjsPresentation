@@ -1,0 +1,197 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>SICP and RxJS</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<!-- slide 1 -->
+				<section>
+					<section data-markdown>
+						# the observable
+
+						```
+							Object.assign({}, Stream, Observer, Iterator);
+						```
+						Steven Myers
+
+					</section>
+
+				</section>
+
+				<!-- slide 2 -->
+					<section>
+						<section>
+							<h3>streams</h3>
+							<img width="300" src ="img/xTutor1.jpg">
+							<p style="font-size: 75%; background:#33334d; border-radius: 25px; padding: 10px;">
+								"Streams are a clever idea that allows one to use sequence manipulations without incurring the costs of
+								 manipulating sequences as lists. With streams we can achieve the best of both worlds: We can
+								 formulate programs elegantly as sequence manipulations, while attaining the efficiency of incremental
+								 computation. The basic idea is to arrange to construct a stream only partially, and to pass the partial
+								 construction to the program that consumes the stream."
+							</p>
+						</section>
+					</section>
+						<!-- slide 2 vertical 1 -->
+					<section>
+						<section>
+							<p>Imperative function</p>
+							<section data-markdown>
+									```js
+									function sumPrimes(start, end){
+									  let accum = 0;
+									  for(let i = start; i <= end; i++){
+									    if(isPrime(i)){
+									      accum += i;
+									    }
+									  }
+									  return accum;
+									}
+									```
+							</section>
+							<p>functional version</p>
+							<section data-markdown>
+									```js
+									function sumPrimes(start, end){
+									  return enumerateInterval(start, end)
+									         .filter( x => isPrime(x))
+									         .reduce( (prev, curr) => prev + curr);
+									}
+									```
+							</section>
+					</section>
+				</section>
+				<!-- slide 3 -->
+				<section>
+					<section>
+						<p>synchronous stream version</p>
+						<section data-markdown>
+						```js
+						Rx.Observable.range(0, Number.MAX_VALUE)
+						  .take(10)
+						  .filter( x => isPrime(x))
+						  .reduce( (acc, val) => {
+						    acc.vals.push(val);
+						    acc.sum += val;
+						    return acc;
+						  }, {vals: [], sum: 0})
+						```
+						</section>
+						<button id="streamsBtnOne">execute</button>
+						<p id="streamsOutOne"></p>
+					</section>
+					<section>
+						<p>asynchronous stream version</p>
+						<section data-markdown>
+              ```js
+              Rx.Observable.range(0, Number.MAX_VALUE, Rx.Scheduler.async)
+                .filter( x => isPrime(x))
+                .scan( (acc, val) => {
+                  acc.val = val;
+                  acc.sum += val;
+                  return acc;
+                }, {val: 0, sum: 0})
+                .throttle(ev => Rx.Observable.interval(1000))
+              ```
+						</section>
+						<div>
+							<button id="streamsBtnTwoStart" style="display:inline-block">execute</button>
+							<button id="streamsBtnTwoEnd" style="display:inline-block">terminate</button>
+						</div>
+						<p id="streamsOutTwo"></p>
+					</section>
+				</section>
+				<section>
+					<section>
+						<p style="font-size: 25%;">
+							Image taken from <a href="https://gist.github.com/staltz/868e7e9bc2a7b8c1f754" target="_blank">
+								Andre Staltz: The introduction to Reactive Programming you've been missing
+							</a>
+						</p>
+						<img width="300" src="img/everything_stream.jpg">
+
+						<section data-markdown>
+							```js
+							Rx.Observable.fromEvent(document, 'click');
+							Rx.Observable.ajax( url: 'products', method: 'GET' });
+							Rx.Observable.of(10, 20, 30);
+							Rx.Observable.fromPromise(db.save(customerOrder));
+							```
+						</section>
+						<a
+							href="http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html"
+							target="_blank">
+							And many more...
+						</a>
+					</section>
+					<section>
+						<section data-markdown>
+						```js
+						const height$ = Rx.Observable.fromEvent(heightSlider, 'input')
+						                .map(ev => ev.target.value),
+      weight$ = Rx.Observable.fromEvent(weightSlider, 'input')
+                .map(ev => ev.target.value);
+      bmi$    = Rx.Observable.combineLatest(
+                weight$.startWith(70),
+                height$.startWith(170),
+                (weight, height) => {
+                  const heightMeters  = height * 0.01,
+                        heightSquared = heightMeters * heightMeters,
+                        bmi = Math.round(weight / (heightSquared));
+                  return {weight, height, bmi};
+                });
+						```
+						</section>
+						<p style="font-size: 25%;"> example adapted from <a href="http://staltz.com/" target="_blank">Andre Staltz </a></p>
+
+						<input type="range" id="weightSlider" min="40" max="140" value="70">
+						<div id="weightOutput" style="font-size: 50%;"></div>
+						<input type="range" id="heightSlider" min="140" max="210" value="170">
+						<div id="heightOutput" style="font-size: 50%;"></div>
+						<div id="bmiOutput"></div>
+
+					</section>
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+		<script src="https://npmcdn.com/@reactivex/rxjs/dist/global/Rx.umd.js"></script>
+		<script src="js/streams.js"></script>
+		<script>
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				history: true,
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
