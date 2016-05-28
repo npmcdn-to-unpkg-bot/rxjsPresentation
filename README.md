@@ -2,7 +2,7 @@
 
 note uses untranspiled ES6... make sure the features in the files
 
-* js/reveal.js
+* js/streams.js
 
 are compatible with your browser.
 
